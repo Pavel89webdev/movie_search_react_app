@@ -1,4 +1,4 @@
-it is a standart Reakt README ;)
+it is a standart React README ;)
 
 ---
 
