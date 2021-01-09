@@ -1,7 +1,10 @@
 import React, { Component } from "react";
 import { v4 } from "uuid";
+import { Spin } from "antd";
 import CardItem from "../CardItem";
 import MovieService from "../../services/MovieService";
+
+import "./CardList.sass";
 
 const movieService = new MovieService();
 
@@ -13,11 +16,18 @@ export default class CardList extends Component {
 	}
 
 	getMovie = () =>
-		movieService.findMovie("return").then((data) => {
-			// eslint-disable-next-line no-console
-			console.log(data);
-			this.setMoviesToState(data.results);
-		});
+		movieService
+			.findMovie("return")
+			.then((data) => {
+				// eslint-disable-next-line no-console
+				console.log(data);
+				this.setMoviesToState(data.results);
+			})
+			.catch((e) => {
+				// eslint-disable-next-line no-console
+				console.log(e);
+				this.setState(() => ({ error: e.message }));
+			});
 
 	setMoviesToState = (resultsArr) => {
 		const newState = {
@@ -50,11 +60,18 @@ export default class CardList extends Component {
 		));
 
 	render() {
-		const { movies } = this.state;
+		const { movies, error } = this.state;
 
 		if (movies) {
 			return <>{this.createCardsArr(movies)}</>;
 		}
-		return <h1>Loading...</h1>;
+		if (error) {
+			return <div className="status">{error}</div>;
+		}
+		return (
+			<div className="status">
+				<Spin size="large" tip="Loading..." />
+			</div>
+		);
 	}
 }

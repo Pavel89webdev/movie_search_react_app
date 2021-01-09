@@ -11,7 +11,7 @@ import "./CardItem.sass";
 function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
 	const { Title, Text } = Typography;
 	const textcutter = new TextCutter(description);
-	const descriptionToRender = textcutter.cut(220);
+	const descriptionToRender = textcutter.cut(180);
 
 	const dateString = parse(realeseDate, "yyyy-MM-dd", new Date());
 	const dateToRender = format(dateString, "MMMM d, yyyy");
@@ -31,27 +31,25 @@ function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
 
 	return (
 		<div className="card card--margin-bottom">
-			<div className="card__header">
-				<div className="card__img-wrapper">
-					{posterUrl && (
-						<img
-							className="card__img"
-							src={posterUrl}
-							alt="film cover"
-						/>
-					)}
+			<div className="card__img-wrapper">
+				{posterUrl && (
+					<img
+						className="card__img"
+						src={posterUrl}
+						alt="film cover"
+					/>
+				)}
 
-					{!posterUrl && (
-						<span className="card__img card__img--no-data">
-							&#10067;
-						</span>
-					)}
-				</div>
-				<div className="card__header__text-block">
-					<Title level={4}>{title}</Title>
-					<Text type="secondary">{dateToRender}</Text>
-					<div className="card__genres">{genres(genresIds)}</div>
-				</div>
+				{!posterUrl && (
+					<span className="card__img card__img--no-data">
+						&#10067;
+					</span>
+				)}
+			</div>
+			<div className="card__header__text-block">
+				<Title level={4}>{title}</Title>
+				<Text type="secondary">{dateToRender}</Text>
+				<div className="card__genres">{genres(genresIds)}</div>
 			</div>
 			<div className="card__description">
 				<Text>{descriptionToRender}</Text>
