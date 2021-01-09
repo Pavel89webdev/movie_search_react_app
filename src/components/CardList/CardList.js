@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { v4 } from "uuid";
-import { Spin } from "antd";
+import { Spin, Alert, Button } from "antd";
 import CardItem from "../CardItem";
 import MovieService from "../../services/MovieService";
 
@@ -12,12 +12,13 @@ export default class CardList extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
-		this.getMovie();
+		this.getMovie("return");
 	}
 
-	getMovie = () =>
+	getMovie = (text) => {
+		this.setState(() => ({ loading: true }));
 		movieService
-			.findMovie("return")
+			.findMovie(text)
 			.then((data) => {
 				// eslint-disable-next-line no-console
 				console.log(data);
@@ -26,11 +27,16 @@ export default class CardList extends Component {
 			.catch((e) => {
 				// eslint-disable-next-line no-console
 				console.log(e);
-				this.setState(() => ({ error: e.message }));
+				this.setState(() => ({
+					loading: false,
+					error: e.message,
+				}));
 			});
+	};
 
 	setMoviesToState = (resultsArr) => {
 		const newState = {
+			loading: false,
 			movies: [],
 		};
 		resultsArr.forEach((item) => {
@@ -60,18 +66,41 @@ export default class CardList extends Component {
 		));
 
 	render() {
-		const { movies, error } = this.state;
+		const { movies, error, loading } = this.state;
 
-		if (movies) {
-			return <>{this.createCardsArr(movies)}</>;
-		}
-		if (error) {
-			return <div className="status">{error}</div>;
-		}
-		return (
+		const renderMovie =
+			movies && !error && !loading ? (
+				<>
+					<Button
+						onClick={() => this.getMovie("refresh")}
+						className="refresh-button">
+						Referesh items
+					</Button>
+					{this.createCardsArr(movies)}
+				</>
+			) : null;
+
+		const errorAlert = error ? (
+			<div className="status">
+				<Alert
+					message={`Something goes wrong :(    Error: ${error}`}
+					type="error"
+				/>
+			</div>
+		) : null;
+
+		const loadingStatus = loading ? (
 			<div className="status">
 				<Spin size="large" tip="Loading..." />
 			</div>
+		) : null;
+
+		return (
+			<>
+				{renderMovie}
+				{errorAlert}
+				{loadingStatus}
+			</>
 		);
 	}
 }
