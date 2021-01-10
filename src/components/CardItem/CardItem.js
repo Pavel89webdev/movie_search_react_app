@@ -12,9 +12,15 @@ function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
 	const { Title, Text } = Typography;
 	const textcutter = new TextCutter(description);
 	const descriptionToRender = textcutter.cut(180);
+	let dateToRender = "no realese date";
 
-	const dateString = parse(realeseDate, "yyyy-MM-dd", new Date());
-	const dateToRender = format(dateString, "MMMM d, yyyy");
+	try {
+		const dateString = parse(realeseDate, "yyyy-MM-dd", new Date());
+		dateToRender = format(dateString, "MMMM d, yyyy");
+	} catch (e) {
+		// eslint-disable-next-line no-console
+		console.log(`no realese date for film: ${title}`);
+	}
 
 	const genres = (genresArr) =>
 		genresArr.map((genre) => (

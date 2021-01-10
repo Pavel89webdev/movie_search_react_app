@@ -1,6 +1,8 @@
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import { v4 } from "uuid";
-import { Spin, Alert, Button } from "antd";
+import debounce from "lodash.debounce";
+import { Spin, Alert } from "antd";
 import CardItem from "../CardItem";
 import MovieService from "../../services/MovieService";
 
@@ -9,24 +11,50 @@ import "./CardList.sass";
 const movieService = new MovieService();
 
 export default class CardList extends Component {
+	static defaultProps = {
+		searchQuery: "return",
+		currentPage: 1,
+	};
+
+	static propTypes = {
+		searchQuery: PropTypes.string,
+		currentPage: PropTypes.number,
+	};
+
+	debounsedGetMovie = debounce(() => {
+		this.getMovie.call(this);
+	}, 1000);
+
 	constructor(props) {
 		super(props);
-		this.state = {};
-		this.getMovie("return");
+		this.state = {
+			movies: [],
+		};
 	}
 
-	getMovie = (text) => {
+	componentDidMount() {
+		this.getMovie();
+	}
+
+	componentDidUpdate(prevProps) {
+		const { searchQuery } = this.props;
+
+		if (prevProps.searchQuery !== searchQuery) {
+			this.debounsedGetMovie();
+		}
+	}
+
+	getMovie = () => {
 		this.setState(() => ({ loading: true }));
+
+		const { searchQuery, currentPage } = this.props;
+
 		movieService
-			.findMovie(text)
+			.findMovie(searchQuery, currentPage)
 			.then((data) => {
-				// eslint-disable-next-line no-console
-				console.log(data);
 				this.setMoviesToState(data.results);
 			})
 			.catch((e) => {
-				// eslint-disable-next-line no-console
-				console.log(e);
 				this.setState(() => ({
 					loading: false,
 					error: e.message,
@@ -67,39 +95,50 @@ export default class CardList extends Component {
 
 	render() {
 		const { movies, error, loading } = this.state;
+		const { searchQuery } = this.props;
 
-		const renderMovie =
-			movies && !error && !loading ? (
-				<>
-					<Button
-						onClick={() => this.getMovie("refresh")}
-						className="refresh-button">
-						Referesh items
-					</Button>
-					{this.createCardsArr(movies)}
-				</>
-			) : null;
+		const CardListContent = () => <>{this.createCardsArr(movies)}</>;
 
-		const errorAlert = error ? (
+		const ErrorAlert = () => (
 			<div className="status">
 				<Alert
 					message={`Something goes wrong :(    Error: ${error}`}
 					type="error"
 				/>
 			</div>
-		) : null;
+		);
 
-		const loadingStatus = loading ? (
+		const LoadingStatus = () => (
 			<div className="status">
 				<Spin size="large" tip="Loading..." />
 			</div>
-		) : null;
+		);
+
+		const NoResults = () => (
+			<div className="status">
+				<Alert
+					message={`No results by searching: "${searchQuery}"`}
+					type="error"
+				/>
+			</div>
+		);
+
+		const renderMovie =
+			movies && !error && !loading ? <CardListContent /> : null;
+
+		const errorAlert = error ? <ErrorAlert /> : null;
+
+		const loadingStatus = loading ? <LoadingStatus /> : null;
+
+		const noResults =
+			movies.length === 0 && !error && !loading ? <NoResults /> : null;
 
 		return (
 			<>
 				{renderMovie}
 				{errorAlert}
 				{loadingStatus}
+				{noResults}
 			</>
 		);
 	}

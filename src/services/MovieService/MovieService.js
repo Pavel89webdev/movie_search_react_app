@@ -7,19 +7,19 @@ export default class MovieService {
 		try {
 			const result = await fetch(url);
 			if (!result.ok) {
-				throw new Error(
-					`server is not respone :(. Error code is: ${result.status}`
-				);
+				throw new Error(`Error code is: ${result.status}`);
 			}
 			const body = await result.json();
+			// eslint-disable-next-line no-console
+			console.log(body);
 			return body;
 		} catch (e) {
 			throw new Error(e);
 		}
 	}
 
-	findMovie(keyWord) {
-		const queryString = `&ne-US&query=${keyWord}&page=1&include_adult=false`;
+	findMovie(keyWord, page) {
+		const queryString = `&ne-US&query=${keyWord}&page=${page}&include_adult=false`;
 		const url = `${this.apiBase}search/movie${this.apiKey}${queryString}`;
 		return this.getResourse(url);
 	}

@@ -11,6 +11,7 @@
     "max-depth": ["warn", 4],
     "id-length": ["warn", { "exceptions": ["i", "j", "f", "e"], "min": 2 }],
     "no-lonely-if": ["error"],
+    "no-unused-vars": 1,
     "no-plusplus": ["off"],
     "no-param-reassign": "off",
     "no-restricted-syntax": "off",
@@ -24,6 +25,7 @@
       }
     ],
     "react/state-in-constructor": ["off"],
+    "react/prop-types": 1,
     "react/jsx-props-no-spreading": ["off"],
     "react/static-property-placement": "off",
     "react/forbid-prop-types": "off",

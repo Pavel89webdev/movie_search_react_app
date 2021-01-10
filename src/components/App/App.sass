@@ -1,0 +1,16 @@
+.container
+    padding: 20px 16px 20px 16px
+    background-color: #fff
+    &--max-width
+        max-width: 1010px
+        width: 100%
+        margin: 0 auto
+        min-height: 100vh
+
+@media screen and (min-width: 1010px)
+    .container
+        padding: 20px 32px 20px 32px
+        display: grid
+        grid-template-columns: auto auto
+        grid-template-rows: 72px auto
+        column-gap: 36px
