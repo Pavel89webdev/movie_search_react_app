@@ -7,7 +7,7 @@ import "./SearchPannel.sass";
 function SearchPannel({ changeInput }) {
 	return (
 		<Input
-			className="search-pannel search-pannel--margin"
+			className="search-pannel"
 			placeholder="Search"
 			onChange={(e) => {
 				changeInput(e.target.value);

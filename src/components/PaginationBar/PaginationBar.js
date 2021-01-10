@@ -5,11 +5,11 @@ import { Pagination } from "antd";
 class PaginationBar extends Component {
 	static defaultProps = {
 		onChange: (f) => f,
-		totalPages: 10,
+		totalItems: 10,
 	};
 
 	static propTypes = {
-		totalPages: PropTypes.number,
+		totalItems: PropTypes.number,
 		onChange: PropTypes.func,
 	};
 
@@ -34,13 +34,16 @@ class PaginationBar extends Component {
 
 	render() {
 		const { currentPage } = this.state;
-		const { totalPages } = this.props;
+		const { totalItems } = this.props;
 
 		return (
 			<Pagination
+				defaultPageSize={20}
+				showSizeChanger={false}
+				className="pagination"
 				current={currentPage}
 				onChange={this.onChange}
-				total={totalPages}
+				total={totalItems}
 			/>
 		);
 	}
