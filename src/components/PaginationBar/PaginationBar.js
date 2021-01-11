@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Pagination } from "antd";
 
+import "./PaginationBar.sass";
+
 class PaginationBar extends Component {
 	static defaultProps = {
 		onChange: (f) => f,

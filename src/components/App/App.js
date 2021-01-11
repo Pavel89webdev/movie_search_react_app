@@ -30,7 +30,6 @@ class App extends Component {
 
 	componentDidMount() {
 		const { searchQuery, currentPage } = this.state;
-
 		this.setState(() => ({
 			loading: true,
 		}));
@@ -41,15 +40,25 @@ class App extends Component {
 	updateMovies(searchQuery, page) {
 		movieService
 			.findMovie(searchQuery, page)
-			// eslint-disable-next-line no-console
 			.then((data) => {
+				// eslint-disable-next-line no-console
 				console.log(data);
 				this.setState(() => ({
+					error: false,
 					searchQuery,
 					movies: data.results,
 					totalItems: data.total_results,
 					currentPage: data.page,
 					loading: false,
+				}));
+			})
+			.catch((e) => {
+				// eslint-disable-next-line no-console
+				console.log(e);
+				this.setState(() => ({
+					searchQuery,
+					movies: [],
+					error: e,
 				}));
 			});
 	}
@@ -83,7 +92,7 @@ class App extends Component {
 				<main className="container container--max-width">
 					{loading && <LoadingMessage />}
 					{haveResult && <CardList movies={movies} />}
-					{!haveResult && (
+					{!haveResult && !loading && !error && (
 						<NoResultMessage searchQuery={searchQuery} />
 					)}
 					{error && <ErrorMessage error={error} />}
