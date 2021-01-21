@@ -1,48 +1,74 @@
 import React, { Component } from "react";
 import debounce from "lodash.debounce";
+import { Tabs } from "antd";
 
-import SearchPannel from "../SearchPannel";
-import CardList from "../CardList";
-import PaginationBar from "../PaginationBar";
-import NoResultMessage from "../NoResultMessage";
-import ErrorMessage from "../ErrorMessage";
-import LoadingMessage from "../LoadingMessage";
+import SearchPage from "../SearchPage";
+import RatedPage from "../RatedPage";
 
 import MovieService from "../../services/MovieService";
+import Context from "../MovieSeviceContext/MovieSeviceContext";
 
 import "./App.sass";
-
-const movieService = new MovieService();
 
 class App extends Component {
 	state = {
 		searchQuery: "return",
 		movies: [],
+		ratedMovies: [],
 		currentPage: 1,
 		loading: true,
 		error: false, //	error.mesage == string
 		totalItems: 0,
 	};
 
+	movieService = new MovieService();
+
+	genres;
+
 	debounceUpdateMovie = debounce((text, page) => {
 		this.updateMovies(text, page);
 	}, 1000);
 
 	componentDidMount() {
+		if (sessionStorage.getItem("guestSessionId")) {
+			this.movieService.setGuestSessionId(
+				sessionStorage.getItem("guestSessionId")
+			);
+		}
+
+		if (!sessionStorage.getItem("guestSessionId")) {
+			this.movieService.createNewGuestSession();
+		}
+
 		const { searchQuery, currentPage } = this.state;
 		this.setState(() => ({
 			loading: true,
 		}));
 
+		this.movieService.getGenres().then((genres) => {
+			this.genres = genres;
+		});
 		this.updateMovies(searchQuery, currentPage);
+		this.setRatedMoviesToState();
+	}
+
+	componentDidUpdate() {
+		// eslint-disable-next-line no-console
+		console.log("update");
+	}
+
+	setRatedMoviesToState() {
+		this.movieService.getRatedMovies().then((ratedMovies) => {
+			this.setState({
+				ratedMovies: ratedMovies.results,
+			});
+		});
 	}
 
 	updateMovies(searchQuery, page) {
-		movieService
+		this.movieService
 			.findMovie(searchQuery, page)
 			.then((data) => {
-				// eslint-disable-next-line no-console
-				console.log(data);
 				this.setState(() => ({
 					error: false,
 					searchQuery,
@@ -76,36 +102,67 @@ class App extends Component {
 	}
 
 	render() {
-		const { movies, totalItems, error, loading, searchQuery } = this.state;
+		const {
+			movies,
+			ratedMovies,
+			totalItems,
+			error,
+			loading,
+			searchQuery,
+		} = this.state;
+
+		const { TabPane } = Tabs;
 
 		const haveResult = !!movies.length;
 
+		const searchPage = () => (
+			<SearchPage
+				updateInput={(value) => {
+					this.updateInput(value);
+				}}
+				loading={loading}
+				haveResult={haveResult}
+				movies={movies}
+				ratedMovies={ratedMovies}
+				error={error}
+				searchQuery={searchQuery}
+				changeCurrentPage={(newPage) => {
+					this.changeCurrentPage(newPage);
+				}}
+				totalItems={totalItems}
+			/>
+		);
+
+		const ratedPage = () => (
+			<RatedPage
+				loading={loading}
+				ratedMovies={ratedMovies}
+				error={error}
+			/>
+		);
+
 		return (
-			<div className="container container--fill-height">
-				<div className="container container--max-width">
-					<SearchPannel
-						changeInput={(value) => {
-							this.updateInput(value);
-						}}
-					/>
+			<Context.Provider
+				value={{
+					movieService: this.movieService,
+					genres: this.genres,
+				}}>
+				<div className="container container--fill-height">
+					<Tabs
+						defaultActiveKey="1"
+						centered
+						onChange={(key) => {
+							if (key === "2") this.setRatedMoviesToState();
+						}}>
+						<TabPane tab="Search" key="1">
+							{searchPage()}
+						</TabPane>
+						<TabPane tab="Rated" key="2">
+							{ratedPage()}
+						</TabPane>
+					</Tabs>
 				</div>
-				<main className="container container--max-width">
-					{loading && <LoadingMessage />}
-					{haveResult && <CardList movies={movies} />}
-					{!haveResult && !loading && !error && (
-						<NoResultMessage searchQuery={searchQuery} />
-					)}
-					{error && <ErrorMessage error={error} />}
-				</main>
-				<div className="container container--max-width">
-					<PaginationBar
-						onChange={(newPage) => {
-							this.changeCurrentPage(newPage);
-						}}
-						totalItems={totalItems}
-					/>
-				</div>
-			</div>
+			</Context.Provider>
 		);
 	}
 }

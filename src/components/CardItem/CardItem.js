@@ -1,17 +1,34 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { v4 } from "uuid";
-import { Typography } from "antd";
+import { Typography, Rate } from "antd";
 import parse from "date-fns/parse";
 import format from "date-fns/format";
+
+import Context from "../MovieSeviceContext/MovieSeviceContext";
 
 import TextCutter from "../../services/TextCutter";
 import "./CardItem.sass";
 
-function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
+import AverageRating from "../AverageRating";
+
+function CardItem({
+	title,
+	realeseDate,
+	genresIds,
+	coverPath,
+	description,
+	id,
+	myRating,
+	averageRating,
+}) {
 	const { Title, Text } = Typography;
 	const textcutter = new TextCutter(description);
-	const descriptionToRender = textcutter.cut(180);
+	let descriptionToRender = textcutter.cut(280);
+
+	if (window.matchMedia("screen and (min-width: 1010px)").matches) {
+		descriptionToRender = textcutter.cut(130);
+	}
+
 	let dateToRender = "no realese date";
 
 	try {
@@ -22,12 +39,17 @@ function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
 		console.log(`no realese date for film: ${title}`);
 	}
 
-	const genres = (genresArr) =>
-		genresArr.map((genre) => (
-			<Text keyboard key={v4()}>
-				{genre}
+	const genresToRender = (genres) => {
+		const movieGenres = genres.genres.filter((genreObj) =>
+			genresIds.includes(genreObj.id, 0)
+		);
+
+		return movieGenres.map((genre) => (
+			<Text keyboard key={genre.name}>
+				{genre.name}
 			</Text>
 		));
+	};
 
 	let posterUrl = false;
 
@@ -36,31 +58,48 @@ function CardItem({ title, realeseDate, genresIds, coverPath, description }) {
 	}
 
 	return (
-		<div className="card card--margin-bottom">
-			<div className="card__img-wrapper">
-				{posterUrl && (
-					<img
-						className="card__img"
-						src={posterUrl}
-						alt="film cover"
-					/>
-				)}
+		<Context.Consumer>
+			{({ movieService, genres }) => (
+				<div className="card card--margin-bottom">
+					<div className="card__img-wrapper">
+						{posterUrl && (
+							<img
+								className="card__img"
+								src={posterUrl}
+								alt="film cover"
+							/>
+						)}
 
-				{!posterUrl && (
-					<span className="card__img card__img--no-data">
-						&#10067;
-					</span>
-				)}
-			</div>
-			<div className="card__header__text-block">
-				<Title level={4}>{title}</Title>
-				<Text type="secondary">{dateToRender}</Text>
-				<div className="card__genres">{genres(genresIds)}</div>
-			</div>
-			<div className="card__description">
-				<Text>{descriptionToRender}</Text>
-			</div>
-		</div>
+						{!posterUrl && (
+							<span className="card__img card__img--no-data">
+								&#10067;
+							</span>
+						)}
+					</div>
+					<div className="card__header__text-block">
+						<Title level={4}>{title}</Title>
+						<Text type="secondary">{dateToRender}</Text>
+						<div className="card__genres">
+							{genresToRender(genres)}
+						</div>
+					</div>
+					<div className="card__description">
+						<Text>{descriptionToRender}</Text>
+					</div>
+
+					<Rate
+						className="rating rating--margin"
+						defaultValue={myRating}
+						count={10}
+						onChange={(value) => {
+							movieService.rateMovie(id, value);
+						}}
+					/>
+
+					<AverageRating averageRating={averageRating} />
+				</div>
+			)}
+		</Context.Consumer>
 	);
 }
 
@@ -70,6 +109,9 @@ CardItem.propTypes = {
 	genresIds: PropTypes.array,
 	coverPath: PropTypes.string,
 	description: PropTypes.string,
+	id: PropTypes.number,
+	myRating: PropTypes.number,
+	averageRating: PropTypes.number,
 };
 
 CardItem.defaultProps = {
@@ -78,6 +120,9 @@ CardItem.defaultProps = {
 	genresIds: [],
 	coverPath: "no img url",
 	description: "no description",
+	id: 0,
+	myRating: 0,
+	averageRating: 1,
 };
 
 export default CardItem;
