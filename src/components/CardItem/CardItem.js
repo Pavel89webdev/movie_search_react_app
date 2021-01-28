@@ -6,7 +6,7 @@ import format from "date-fns/format";
 
 import Context from "../MovieSeviceContext/MovieSeviceContext";
 
-import TextCutter from "../../services/TextCutter";
+import textCutter from "../../services/textCutter";
 import "./CardItem.sass";
 
 import AverageRating from "../AverageRating";
@@ -22,12 +22,14 @@ function CardItem({
 	averageRating,
 }) {
 	const { Title, Text } = Typography;
-	const textcutter = new TextCutter(description);
-	let descriptionToRender = textcutter.cut(280);
+
+	let textLength = 280;
 
 	if (window.matchMedia("screen and (min-width: 1010px)").matches) {
-		descriptionToRender = textcutter.cut(130);
+		textLength = 130;
 	}
+
+	const descriptionToRender = textCutter(description, textLength);
 
 	let dateToRender = "no realese date";
 

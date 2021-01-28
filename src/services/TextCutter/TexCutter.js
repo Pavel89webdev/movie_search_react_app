@@ -1,27 +1,22 @@
-export default class TextCutter {
-	constructor(text) {
-		this.text = text;
+function textCutter(text, length) {
+	let newText;
+
+	if (text.length <= length) {
+		newText = text;
 	}
 
-	cut(maxWordsCount) {
-		const { text } = this;
-		let newText;
-
-		if (text.length <= maxWordsCount) {
-			newText = text;
+	if (text.length > length) {
+		const lastWord = text[length];
+		if (lastWord === " ") {
+			newText = `${text.slice(0, length)} ...`;
 		}
-
-		if (text.length >= maxWordsCount) {
-			const lastWord = text[maxWordsCount];
-			if (lastWord === " ") {
-				newText = `${text.slice(0, maxWordsCount)} ...`;
-			}
-			if (lastWord !== " ") {
-				const lastSpaceIndex = text.lastIndexOf(" ", maxWordsCount);
-				newText = `${text.slice(0, lastSpaceIndex)} ...`;
-			}
+		if (lastWord !== " ") {
+			const lastSpaceIndex = text.lastIndexOf(" ", length);
+			newText = `${text.slice(0, lastSpaceIndex)} ...`;
 		}
-
-		return newText;
 	}
+
+	return newText;
 }
+
+export default textCutter;

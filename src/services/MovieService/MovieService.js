@@ -1,19 +1,24 @@
-export default class MovieService {
+class MovieService {
 	apiBase = "https://api.themoviedb.org/3/";
 
 	apiKey = "?api_key=733f3d3b61188971a74a40a2b570a995";
 
 	guestSessionId;
 
-	async getResourse(url) {
+	async getResourse(url, options = null) {
 		try {
-			const result = await fetch(url);
+			let result;
+			if (!options) {
+				result = await fetch(url);
+			}
+			if (options && typeof options === "object") {
+				result = await fetch(url, options);
+			}
+
 			if (!result.ok) {
 				throw new Error(`Error code is: ${result.status}`);
 			}
 			const body = await result.json();
-			// eslint-disable-next-line no-console
-			console.log(body);
 			return body;
 		} catch (e) {
 			throw new Error(e);
@@ -35,51 +40,57 @@ export default class MovieService {
 		this.guestSessionId = guestSessoinId;
 	}
 
-	createNewGuestSession() {
+	async createNewGuestSession() {
 		const url = `${this.apiBase}authentication/guest_session/new${this.apiKey}`;
-		this.getResourse(url).then((response) => {
+		await this.getResourse(url).then((response) => {
 			this.setGuestSessionId(response.guest_session_id);
 			sessionStorage.setItem("guestSessionId", this.guestSessionId);
-			return response;
 		});
+		return true;
 	}
 
 	async rateMovie(id, value) {
 		const url = `${this.apiBase}movie/${id}/rating${this.apiKey}&guest_session_id=${this.guestSessionId}`;
+		const options = {
+			method: "POST",
+			api_key: this.apiKey,
+			movie_id: id,
+			body: JSON.stringify({ value }),
+			headers: {
+				"Content-Type": "application/json;charset=utf-8",
+			},
+		};
 		try {
-			const rateResult = await fetch(url, {
-				method: "POST",
-				api_key: this.apiKey,
-				movie_id: id,
-				body: JSON.stringify({ value }),
-				headers: {
-					"Content-Type": "application/json;charset=utf-8",
-				},
-			});
-			if (!rateResult.ok) {
-				throw new Error(
-					`Status is not OK, status: ${rateResult.status}`
-				);
-			}
-			const body = await rateResult.json();
-			// eslint-disable-next-line no-console
-			console.log(body);
-			return body;
+			await this.getResourse(url, options);
 		} catch (e) {
-			// eslint-disable-next-line no-console
-			return console.log(`Error in MovieService: ${e}`);
+			const errorCode = +e.message.slice(-3);
+			if (errorCode === 401) {
+				const refreshSession = await this.createNewGuestSession();
+				if (refreshSession) {
+					this.rateMovie(id, value);
+				}
+			}
 		}
 	}
 
 	async getRatedMovies() {
 		const url = `${this.apiBase}guest_session/${this.guestSessionId}/rated/movies${this.apiKey}`;
 		try {
-			const response = await fetch(url);
-			const ratedMovies = await response.json();
+			const ratedMovies = await this.getResourse(url);
 			return ratedMovies;
 		} catch (e) {
-			// eslint-disable-next-line no-console
-			return console.log(`Error in MovieService: ${e}`);
+			const errorCode = +e.message.slice(-3);
+			if (errorCode === 401) {
+				const refreshSession = await this.createNewGuestSession();
+				if (refreshSession) {
+					return this.getRatedMovies();
+				}
+			}
+			return undefined;
 		}
 	}
 }
+
+const movieservice = new MovieService();
+
+export default movieservice;

@@ -5,7 +5,8 @@ import { Tabs } from "antd";
 import SearchPage from "../SearchPage";
 import RatedPage from "../RatedPage";
 
-import MovieService from "../../services/MovieService";
+import movieService from "../../services/MovieService";
+import updateGuestSession from "../../services/updateGuestSession";
 import Context from "../MovieSeviceContext/MovieSeviceContext";
 
 import "./App.sass";
@@ -21,8 +22,6 @@ class App extends Component {
 		totalItems: 0,
 	};
 
-	movieService = new MovieService();
-
 	genres;
 
 	debounceUpdateMovie = debounce((text, page) => {
@@ -30,43 +29,42 @@ class App extends Component {
 	}, 1000);
 
 	componentDidMount() {
-		if (sessionStorage.getItem("guestSessionId")) {
-			this.movieService.setGuestSessionId(
-				sessionStorage.getItem("guestSessionId")
-			);
-		}
-
-		if (!sessionStorage.getItem("guestSessionId")) {
-			this.movieService.createNewGuestSession();
-		}
-
 		const { searchQuery, currentPage } = this.state;
 		this.setState(() => ({
 			loading: true,
 		}));
 
-		this.movieService.getGenres().then((genres) => {
+		movieService.getGenres().then((genres) => {
 			this.genres = genres;
 		});
-		this.updateMovies(searchQuery, currentPage);
-		this.setRatedMoviesToState();
+
+		if (updateGuestSession()) {
+			this.updateMovies(searchQuery, currentPage);
+		}
 	}
 
-	componentDidUpdate() {
-		// eslint-disable-next-line no-console
-		console.log("update");
+	componentDidCatch(e) {
+		this.setError(e);
 	}
 
 	setRatedMoviesToState() {
-		this.movieService.getRatedMovies().then((ratedMovies) => {
-			this.setState({
-				ratedMovies: ratedMovies.results,
-			});
+		movieService.getRatedMovies().then((ratedMovies) => {
+			if (ratedMovies) {
+				this.setState({
+					ratedMovies: ratedMovies.results,
+				});
+			}
 		});
 	}
 
+	setError(e) {
+		this.setState(() => ({
+			error: e,
+		}));
+	}
+
 	updateMovies(searchQuery, page) {
-		this.movieService
+		movieService
 			.findMovie(searchQuery, page)
 			.then((data) => {
 				this.setState(() => ({
@@ -79,18 +77,20 @@ class App extends Component {
 				}));
 			})
 			.catch((e) => {
-				// eslint-disable-next-line no-console
-				console.log(e);
+				this.setError(e);
 				this.setState(() => ({
 					searchQuery,
 					movies: [],
-					error: e,
 				}));
 			});
 	}
 
 	updateInput(value) {
 		const { currentPage } = this.state;
+
+		this.setState(() => ({
+			searchQuery: value,
+		}));
 
 		this.debounceUpdateMovie(value, currentPage);
 	}
@@ -144,7 +144,7 @@ class App extends Component {
 		return (
 			<Context.Provider
 				value={{
-					movieService: this.movieService,
+					movieService,
 					genres: this.genres,
 				}}>
 				<div className="container container--fill-height">

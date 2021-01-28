@@ -1,3 +1,3 @@
-import TextCutter from "./TexCutter";
+import textCutter from "./texCutter";
 
-export default TextCutter;
+export default textCutter;

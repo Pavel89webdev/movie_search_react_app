@@ -50,28 +50,16 @@ function SearchPage({
 	);
 }
 
-SearchPage.defaultProps = {
-	updateInput: (f) => f,
-	loading: false,
-	haveResult: false,
-	movies: [],
-	ratedMovies: [],
-	error: false,
-	searchQuery: "",
-	changeCurrentPage: (f) => f,
-	totalItems: 1,
-};
-
 SearchPage.propTypes = {
-	updateInput: PropTypes.func,
-	loading: PropTypes.bool,
-	haveResult: PropTypes.bool,
-	movies: PropTypes.array,
-	ratedMovies: PropTypes.array,
-	error: PropTypes.bool,
-	searchQuery: PropTypes.string,
-	changeCurrentPage: PropTypes.func,
-	totalItems: PropTypes.number,
+	updateInput: PropTypes.func.isRequired,
+	loading: PropTypes.bool.isRequired,
+	haveResult: PropTypes.bool.isRequired,
+	movies: PropTypes.array.isRequired,
+	ratedMovies: PropTypes.array.isRequired,
+	error: PropTypes.bool.isRequired,
+	searchQuery: PropTypes.string.isRequired,
+	changeCurrentPage: PropTypes.func.isRequired,
+	totalItems: PropTypes.number.isRequired,
 };
 
 export default SearchPage;
